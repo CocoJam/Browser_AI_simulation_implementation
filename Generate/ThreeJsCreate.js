@@ -12,6 +12,8 @@ var camera2, scene2, controls2, renderer2, pickingTexture;
 var rigidBodies = {};
 var controlerBodies = {};
 var pos = new THREE.Vector3();
+var color = new THREE.Color();
+
 
 var quat = new THREE.Quaternion();
 var plane;
@@ -198,14 +200,18 @@ function addRigid(o, material) {
     threeObject.MeshId = address
     rigidBodies[address] = threeObject
 
+
     o.id = address
     o.slotNum = threeObject.slotNum;
 
     if (o.controler) {
         o.MeshType = "Controler";
-        locationArrayFloat32[0] = o.id;
+        threeObject.MeshType = "Controler"
+        console.log("controler")
+        // locationArrayFloat32[0] = o.id;
     } else {
         o.MeshType = "Rigid";
+        threeObject.MeshType = "Rigid"
     }
 
     sharedInfoArrayFloat32.set(o.position, o.id + 1)
@@ -299,8 +305,21 @@ var onKeyDown = function (event) {
             if (canJump === true) velocity.y += 350;
             canJump = false;
             break;
-        case 67:
+        case 67: //c
             pointerToggle = !pointerToggle;
+            break;
+        case 13:
+            randomGeneratedPickerBox(-45, -45, 45, 45, 10, false)
+            randomGeneratedPickerBox(-45, -45, 45, 45, 10, false)
+            randomGeneratedPickerBox(-45, -45, 45, 45, 10, false)
+            randomGeneratedPickerBox(-45, -45, 45, 45, 10, false)
+            break;
+        case 8:
+            randomGeneratedPickerBox(-45, -45, 45, 45, 100, true);
+            break;
+        case 16:
+        console.log("train")
+            modelTF.training()
             break;
     }
 };

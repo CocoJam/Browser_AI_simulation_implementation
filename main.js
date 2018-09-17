@@ -48,6 +48,8 @@ worker.postMessage(setting)
 
 var controler;
 var cameraTF;
+var modelTF;
+var tfImagePickToggle = false;
 //Worker's responds from ammo.worker.js
 worker.onmessage = function (event) {
 
@@ -61,13 +63,13 @@ worker.onmessage = function (event) {
             //Init the environment for Fast 2d detection to work
             initFast();
             //Init Fast 2d detections object.
-            // var fast = new FastWorker(renderer.domElement, cameraTF.getVideo(), fastWorker, sharedImageArrayUint8, locationArrayFloat32, 5)
+            var fast = new FastWorker(renderer.domElement, cameraTF.getVideo(), fastWorker, sharedImageArrayUint8, locationArrayFloat32, 20)
             //Predefined sandBox set up.
             init();
             //Init the rendering loop with request animation frames.
             animate();
             //TF neural network here.
-            var modelTF = new TensorFlowCamModel(cameraTF);
+            modelTF = new TensorFlowCamModel(cameraTF);
             // fillBall()
 
             //Mouse event used to shoot sphere into the set direction, this is the event part.
@@ -83,7 +85,7 @@ worker.onmessage = function (event) {
 
             }, false);
 
-            addRigid({ controler: true,  mass: 100, type: "box",  position: [0, 0, 0], quat: [0, 0, 0, 1], size: [10, 10, 10] }, new THREE.MeshNormalMaterial())
+            // addRigid({ controler: true,  mass: 100, type: "box",  position: [0, 0, 0], quat: [0, 0, 0, 1], size: [10, 10, 10] }, new THREE.MeshNormalMaterial())
 
             break;
         //Responds from ammo.worker.js to request delete object from the rendering, usually after
@@ -99,16 +101,16 @@ worker.onmessage = function (event) {
     }
 }
 
-// fastWorker.onmessage = function (event) {
-//     switch (event.data.m) {
-//         case "fastInit":
-//             //Can form controlers from here;
-//             console.log("fastInit")
-//             console.log(event)
-//             addRigid({ controler: true,  mass: 100, type: "box",  position: [0, 0, 0], quat: [0, 0, 0, 1], size: [10, 10, 10] }, new THREE.MeshNormalMaterial())
-//             break;
-//     }
-// }
+fastWorker.onmessage = function (event) {
+    switch (event.data.m) {
+        case "fastInit":
+            //Can form controlers from here;
+            console.log("fastInit")
+            // console.log(event)
+            // addRigid({ controler: true,  mass: 100, type: "box",  position: [0, 0, 0], quat: [0, 0, 0, 1], size: [10, 10, 10] }, new THREE.MeshNormalMaterial())
+            break;
+    }
+}
 
 //Starting the sandBox environment.
 function init() {
@@ -119,36 +121,46 @@ function init() {
 //Set up.
 function controlerSelectionEvironment() {
     //Bound of the box
-    addRigid({ type: "box", position: [0, 100, 50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
-    addRigid({ type: "box", position: [0, 100, -50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
-    addRigid({ type: "box", position: [50.5, 100, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
-    addRigid({ type: "box", position: [- 50.5, 100, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
+    addRigid({name:"wall", type: "box", position: [0, 100, 50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
+    addRigid({name:"wall", type: "box", position: [0, 100, -50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
+    addRigid({name:"wall", type: "box", position: [50.5, 100, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
+    addRigid({name:"wall", type: "box", position: [- 50.5, 100, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
     //Material setting for three.js mesh, the bottom side of the gound is rending current video.
     //This is a workaround from other form of high CPU and GPU cross-over to get pixel values
     //This prevented addition high overhead processing power and memory foot-print within GPU and CPU.
-    var materials = [
-        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),        // Left side
-        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),       // Right side
-        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),         // Top side
-        videoMaterial,      // Bottom side
-        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),       // Front side
-        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })         // Back side
-    ];
+    // var materials = [
+    //     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),        // Left side
+    //     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),       // Right side
+    //     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),         // Top side
+    //     videoMaterial,      // Bottom side
+    //     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }),       // Front side
+    //     new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })         // Back side
+    // ];
     // new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 })
+   
     //The Ground
-    addRigid({ name: "ground", type: "box", position: [0, 90, 0], quat: [0, 0, 0, 1], size: [100, 1, 100], texture: "./Asset/grass_texture_by_deathlyrain.jpg" }, materials)
+    addRigid({ name: "ground", type: "box", position: [0, 90, 0], quat: [0, 0, 0, 1], size: [100, 1, 100], texture: "./Asset/grass_texture_by_deathlyrain.jpg" }, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }))
     //The testing box to check for sanity.
     // addRigid({ type: "box", mass: 1, position: [0, 100, 0], quat: [0, 0, 0, 1], size: [10, 10, 10] }, new THREE.MeshNormalMaterial())
+
+
+}
+
+function randomGeneratedPickerBox(minX,minY,maxX,maxY, height ,controler){
+    var X = Math.random()*(maxX-minX)+minX
+    var Y = Math.random()*(maxY-minY)+minY
+    color.setRGB(Math.random(),Math.random(),Math.random())
+    addRigid({controler: controler ,type: "box", mass: 1, position: [X, height, Y], quat: [0, 0, 0, 1], size: [10, 10, 10] }, new THREE.MeshBasicMaterial({color:color}))
 }
 
 
 //Set up.
 function sandBoxSetUp() {
     //Bound of the box
-    addRigid({ type: "box", position: [0, 10, 50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
-    addRigid({ type: "box", position: [0, 10, -50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
-    addRigid({ type: "box", position: [50.5, 10, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
-    addRigid({ type: "box", position: [- 50.5, 10, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
+    addRigid({ name:"wall", type: "box", position: [0, 10, 50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
+    addRigid({ name:"wall", type: "box", position: [0, 10, -50.5], quat: [0, 0, 0, 1], size: [100, 20, 1] }, new THREE.MeshNormalMaterial())
+    addRigid({ name:"wall", type: "box", position: [50.5, 10, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
+    addRigid({ name:"wall", type: "box", position: [- 50.5, 10, 0], quat: [0, 0, 0, 1], size: [1, 20, 100] }, new THREE.MeshNormalMaterial())
     //Material setting for three.js mesh, the bottom side of the gound is rending current video.
     //This is a workaround from other form of high CPU and GPU cross-over to get pixel values
     //This prevented addition high overhead processing power and memory foot-print within GPU and CPU.
@@ -223,8 +235,9 @@ function processClick() {
         pos.copy(raycaster.ray.direction);
         pos.multiplyScalar(20);
         pos.toArray(velocity, 0);
-
+        color.setHex( Math.random() * 0xffffff )
         ThreeMeshCreateByJSON({
+            
             type: "sphere", size: [ballRadius], mass: ballMass, position: position1,
             quat: [0, 0, 0, 1],
             friction: 0.5, LinearVelocity: velocity
@@ -261,16 +274,20 @@ function CanvusOnMouseMove(event) {
     raycaster.setFromCamera(mouse, camera);
     var intersections = raycaster.intersectObjects(rigidBodies);
     // console.log(mouse)
-    if (intersections[0] && intersections[0].object.name === "ground") {
-        console.log(intersections[0].object)
+    if (intersections[0] && intersections[0].object.MeshType === "Controler") {
+        tfImagePickToggle = true;
+        console.log(intersections[0])
+        tfImagePicker(intersections[0])
         // locationArrayFloat32[1] = mouse.x*100
         // locationArrayFloat32[3] = -(mouse.y*100)
     
         // locationArrayFloat32[2] = intersections[0].object.position.y
         
-        locationArrayFloat32[1] = intersections[0].point.x
-        locationArrayFloat32[2] = intersections[0].point.y+10
-        locationArrayFloat32[3] = intersections[0].point.z
+        // locationArrayFloat32[1] = intersections[0].point.x
+        // locationArrayFloat32[2] = intersections[0].point.y+10
+        // locationArrayFloat32[3] = intersections[0].point.z
+
+
         // if (RayTracedMesh === null) {
         //     console.log("RAYTrace")
         //     RayTracedMesh = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshNormalMaterial());
@@ -303,6 +320,26 @@ function CanvusOnMouseMove(event) {
         // RayTracedMesh.position.set(mouse.x * 10, 10, -mouse.y * 10)
 
         // console.log(intersections[0])
+    }
+    else{
+        tfImagePickToggle = false;
+    }
+}
+
+var objectPickHolder = null;
+function tfImagePicker(intersections){
+    if(intersections){
+        objectPickHolder = intersections
+    }
+    if(tfImagePickToggle){
+        // requestAnimationFrame(tfImagePicker)
+        console.log(objectPickHolder)
+        if(objectPickHolder.object.MeshType === "Controler"){
+            if(modelTF){
+                console.log("intersect with controlers")
+                modelTF.capture(intersections.object.MeshId)
+            }
+        }
     }
 }
 
@@ -344,8 +381,6 @@ function intersectObject( object, raycaster, intersects, recursive ) {
 }
 
 function ascSort( a, b ) {
-
     return a.distance - b.distance;
-
 }
 document.addEventListener("mousemove", CanvusOnMouseMove, false)

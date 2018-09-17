@@ -21,7 +21,7 @@ self.onmessage = function (event) {
     }
 
 }
-console.log(self)
+// console.log(self)
 
 function fastInit(o) {
     importScripts(o.blob);
@@ -37,13 +37,18 @@ function fastInit(o) {
     jsfeat.fast_corners.set_threshold(o.threshold);
     jsfeat = jsfeat
     self.postMessage({ m: "fastInit" })
+    console.log("fast Init worker")
 }
 function stepfast() {
+   
     if (jsfeat !== undefined) {
         jsfeat.imgproc.grayscale(FastKeepingUint8, 640, 480, img_u8);
         var count = jsfeat.fast_corners.detect(img_u8, imageCorners, 5);
         var averageX = 0;
         var averageZ = 0;
+        if(count< 100){
+            return;
+        }
         for (var i = 0; i < count; ++i) {
             averageX += imageCorners[i].x / count
             averageZ += imageCorners[i].y / count
@@ -58,10 +63,10 @@ function stepfast() {
         averageZ_ = averageZ / maxZ_ * 90 - 45
         }
         //X and Z position bound is from -45 to 45 
-        // locationArrayFloat32[1] = averageX_;
+        locationArrayFloat32[1] = averageX_;
         // // locationArrayFloat32[2] = averageY_;
-        // locationArrayFloat32[3] = averageZ_;
-        console.log(locationArrayFloat32)
+        locationArrayFloat32[3] = averageZ_;
+        // console.log(locationArrayFloat32)
     }
 }
 

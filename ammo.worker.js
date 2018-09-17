@@ -10,7 +10,7 @@ var bookKeepingUint8, sharedInfoArrayFloat32, locationArrayFloat32;
 var pointerArray;
 //Dynamic memory book keeping
 var MemoryFree = {};
-
+var previousControlerHolder;
 //Messages from main.js and ThreeCreate.js
 self.onmessage = function (event) {
     const o = event.data.o || 0;
@@ -56,6 +56,7 @@ function init(o) {
         sharedInfoArrayFloat32 = o.sharedInfoArrayFloat32;
         pointerArray = o.pointerArray;
         locationArrayFloat32= o.locationArrayFloat32;
+        previousControlerHolder = locationArrayFloat32[0]
         PhysicSetUp(o.settings.gravity);
         //To signal after the engine had been set-up.
         self.postMessage({ m: 'init' });
@@ -203,14 +204,24 @@ function stepControlerBody(array, offset) {
     for (var x in controlerBodies) {
         const body = controlerBodies[x];
         const bodySlot = body.id;
-    
+        
+
+        if( previousControlerHolder !== -1 && previousControlerHolder !== locationArrayFloat32[0]){
+            console.log("not matching")
+            console.log(previousControlerHolder )
+            let previoudControler=  controlerBodies[previousControlerHolder]
+            console.log(previoudControler)
+            previoudControler.body.setCollisionFlags(0)
+            previoudControler.body.setActivationState(1);
+        }
+
         if(bodySlot=== locationArrayFloat32[0]){
             
             transform.setOrigin(tempPoition.fromArray(locationArrayFloat32,1))
             transform.setRotation(tempQuat.fromArray(locationArrayFloat32,4))
             body.body.getMotionState().setWorldTransform( transform );
             sharedInfoArrayFloat32.set(locationArrayFloat32.slice(1,9),bodySlot+1)
-
+            previousControlerHolder = locationArrayFloat32[0]
             // console.log(body.body.getLinearVelocity().length())
             // if(body.body.getLinearVelocity().length() > 0){
             // console.log(body.body.getLinearVelocity().length())
